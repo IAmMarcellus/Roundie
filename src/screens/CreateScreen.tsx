@@ -1,13 +1,16 @@
-import { Button, Form, H1, H2, H3, YStack, Input, H4 } from "tamagui";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
-
-import useMockData from "../hooks/useMockData";
-
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useState } from "react";
+import { useToastController } from "@tamagui/toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { QUERY_KEYS } from "../utils/constants";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { Button, Form, H4, Input, Text, YStack } from "tamagui";
+
+import OptionsListForm from "components/OptionsListForm";
+import useMockData from "hooks/useMockData";
+import { QUERY_KEYS } from "utils/constants";
+
 const CreateScreen = () => {
+  const toast = useToastController();
   const [isDatePickerShown, setIsDatePickerShown] = useState(false);
 
   const {
@@ -21,25 +24,26 @@ const CreateScreen = () => {
       options: [],
     },
   });
-  const { fields, append, prepend, remove, swap, move, insert, replace } =
-    useFieldArray<Bet>({
-      control,
-      name: "options",
-    });
 
   const { createBet } = useMockData();
   const queryClient = useQueryClient();
-  const mutation = useMutation({
+  const createBetMutation = useMutation({
     mutationFn: createBet,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BETS] });
+      toast.show("Bet created!", {
+        message: "New bet successfully created",
+        native: true,
+      });
+      // TODO: Reset form state?
+      // TODO: Go to my bets screen
     },
   });
 
-  const createABet = handleSubmit((data) => console.log(data));
+  const createNewBet = handleSubmit((data) => createBetMutation.mutate(data));
 
   return (
-    <Form onSubmit={createABet}>
+    <Form onSubmit={createNewBet}>
       <YStack alignSelf="center">
         <H4>Bet Title</H4>
         <Controller
@@ -57,6 +61,7 @@ const CreateScreen = () => {
           )}
           name="title"
         />
+        {errors.title && <Text>The bet must have a title</Text>}
 
         <H4>End Date</H4>
         <Controller
@@ -91,42 +96,11 @@ const CreateScreen = () => {
         />
 
         <H4>Options</H4>
-        {fields.map((field, index) => {
-          return (
-            <YStack key={field.id}>
-              <Controller
-                control={control}
-                rules={{
-                  required: true,
-                }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <Input
-                    placeholder={`Option #${index + 1}`}
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
-                  />
-                )}
-                name={`options.${index}.title`}
-              />
-              <Controller
-                control={control}
-                rules={{
-                  required: true,
-                }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <Input
-                    placeholder="Odds"
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value.toString()}
-                  />
-                )}
-                name={`options.${index}.odds`}
-              />
-            </YStack>
-          );
-        })}
+        <OptionsListForm control={control} />
+
+        <Form.Trigger asChild>
+          <Button>Create Bet</Button>
+        </Form.Trigger>
       </YStack>
     </Form>
   );

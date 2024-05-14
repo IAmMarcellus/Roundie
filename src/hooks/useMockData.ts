@@ -1,5 +1,5 @@
+import { HttpResponse, http } from "msw";
 import { useState } from "react";
-import { http, HttpResponse } from "msw";
 
 const useMockData = () => {
   const [bets, setBets] = useState<Bet[]>([]);

@@ -1,10 +1,12 @@
 import { NavigationContainer } from "@react-navigation/native";
-import TabNavigator from "./src/navigation/TabNavigator";
-import { TamaguiProvider, createTamagui } from "tamagui";
 import { config } from "@tamagui/config/v3";
+import { ToastProvider } from "@tamagui/toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { TamaguiProvider, createTamagui } from "tamagui";
+
 import LoadingSpinner from "./src/components/LoadingSpinner";
+import TabNavigator from "./src/navigation/TabNavigator";
 
 const tamaguiConfig = createTamagui(config);
 
@@ -33,11 +35,13 @@ function App() {
       {isLoading ? (
         <LoadingSpinner />
       ) : (
-        <QueryClientProvider client={queryClient}>
-          <NavigationContainer>
-            <TabNavigator />
-          </NavigationContainer>
-        </QueryClientProvider>
+        <ToastProvider>
+          <QueryClientProvider client={queryClient}>
+            <NavigationContainer>
+              <TabNavigator />
+            </NavigationContainer>
+          </QueryClientProvider>
+        </ToastProvider>
       )}
     </TamaguiProvider>
   );

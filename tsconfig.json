@@ -4,6 +4,10 @@
     "strict": true,
     "jsx": "react-native",
     "module": "esnext",
-    "importHelpers": true
+    "importHelpers": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["src/*"]
+    }
   }
 }
