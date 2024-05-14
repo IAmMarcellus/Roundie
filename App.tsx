@@ -1,20 +1,46 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { NavigationContainer } from "@react-navigation/native";
+import TabNavigator from "./src/navigation/TabNavigator";
+import { TamaguiProvider, createTamagui } from "tamagui";
+import { config } from "@tamagui/config/v3";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import LoadingSpinner from "./src/components/LoadingSpinner";
 
-export default function App() {
+const tamaguiConfig = createTamagui(config);
+
+type Conf = typeof tamaguiConfig;
+declare module "@tamagui/core" {
+  interface TamaguiCustomConfig extends Conf {}
+}
+
+const queryClient = new QueryClient();
+
+function App() {
+  const [isLoading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const enableMocking = async () => {
+      await import("./msw.polyfills");
+      const { server } = await import("./src/mocks/server");
+      server.listen();
+    };
+
+    enableMocking().then(() => setLoading(false));
+  }, [setLoading]);
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <TamaguiProvider config={tamaguiConfig}>
+      {isLoading ? (
+        <LoadingSpinner />
+      ) : (
+        <QueryClientProvider client={queryClient}>
+          <NavigationContainer>
+            <TabNavigator />
+          </NavigationContainer>
+        </QueryClientProvider>
+      )}
+    </TamaguiProvider>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;
