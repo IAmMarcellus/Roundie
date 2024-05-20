@@ -1,11 +1,14 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NavigationContainer } from "@react-navigation/native";
 import { config } from "@tamagui/config/v3";
-import { ToastProvider } from "@tamagui/toast";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ToastProvider, ToastViewport } from "@tamagui/toast";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { useEffect, useState } from "react";
 import { TamaguiProvider, createTamagui } from "tamagui";
 
-import LoadingSpinner from "./src/components/LoadingSpinner";
+import LoadingSpinner from "./src/components/atoms/LoadingSpinner";
 import TabNavigator from "./src/navigation/TabNavigator";
 
 const tamaguiConfig = createTamagui(config);
@@ -15,7 +18,16 @@ declare module "@tamagui/core" {
   interface TamaguiCustomConfig extends Conf {}
 }
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      gcTime: Infinity,
+    },
+  },
+});
+const asyncStoragePersister = createAsyncStoragePersister({
+  storage: AsyncStorage,
+});
 
 function App() {
   const [isLoading, setLoading] = useState(true);
@@ -31,19 +43,26 @@ function App() {
   }, [setLoading]);
 
   return (
-    <TamaguiProvider config={tamaguiConfig}>
-      {isLoading ? (
-        <LoadingSpinner />
-      ) : (
-        <ToastProvider>
-          <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister: asyncStoragePersister,
+        maxAge: Infinity,
+      }}
+    >
+      <TamaguiProvider config={tamaguiConfig}>
+        {isLoading ? (
+          <LoadingSpinner />
+        ) : (
+          <ToastProvider>
             <NavigationContainer>
               <TabNavigator />
             </NavigationContainer>
-          </QueryClientProvider>
-        </ToastProvider>
-      )}
-    </TamaguiProvider>
+            <ToastViewport />
+          </ToastProvider>
+        )}
+      </TamaguiProvider>
+    </PersistQueryClientProvider>
   );
 }
 

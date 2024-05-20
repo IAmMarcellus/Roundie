@@ -7,12 +7,12 @@ import {
 import { Button, Input, XStack, YStack } from "tamagui";
 
 type OptionsListFormProps = {
-  control: Control<Bet>;
+  control: Control<BetRequest>;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const OptionsListForm = ({ control }: OptionsListFormProps) => {
-  const { fields, append, remove } = useFieldArray<Bet>({
+  const { fields, append, remove } = useFieldArray<BetRequest>({
     control,
     name: "options",
   });
@@ -48,6 +48,7 @@ const OptionsListForm = ({ control }: OptionsListFormProps) => {
             required: true,
           }}
           render={({ field: { onChange, onBlur, value } }) => (
+            // TODO: Must be at least 100, or under -100
             <Input
               placeholder="Odds"
               onBlur={onBlur}

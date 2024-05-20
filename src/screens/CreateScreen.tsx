@@ -3,10 +3,20 @@ import { useToastController } from "@tamagui/toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Button, Form, H4, Input, Text, YStack } from "tamagui";
+import { KeyboardAvoidingView } from "react-native";
+import {
+  Button,
+  Form,
+  H4,
+  Input,
+  ScrollView,
+  Text,
+  YStack,
+  ZStack,
+} from "tamagui";
 
 import OptionsListForm from "components/OptionsListForm";
-import useMockData from "hooks/useMockData";
+import useBetData from "hooks/useBetData";
 import { QUERY_KEYS } from "utils/constants";
 
 const CreateScreen = () => {
@@ -17,7 +27,7 @@ const CreateScreen = () => {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<Bet>({
+  } = useForm<BetRequest>({
     defaultValues: {
       title: "",
       endDate: new Date(),
@@ -25,12 +35,16 @@ const CreateScreen = () => {
     },
   });
 
-  const { createBet } = useMockData();
+  const { createBet } = useBetData();
   const queryClient = useQueryClient();
   const createBetMutation = useMutation({
     mutationFn: createBet,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BETS] });
+    onSuccess: ({ data: newBet }) => {
+      console.log("new bet request success");
+      queryClient.setQueryData<Bet[]>([QUERY_KEYS.BETS], (oldBets) => [
+        ...(oldBets || []),
+        newBet,
+      ]);
       toast.show("Bet created!", {
         message: "New bet successfully created",
         native: true,
@@ -38,51 +52,55 @@ const CreateScreen = () => {
       // TODO: Reset form state?
       // TODO: Go to my bets screen
     },
+    onError: (error) => {
+      console.log("new bet request error");
+      toast.show("Error creating bet", {
+        message: error.message,
+        native: true,
+      });
+    },
   });
 
   const createNewBet = handleSubmit((data) => createBetMutation.mutate(data));
 
   return (
-    <Form onSubmit={createNewBet}>
-      <YStack alignSelf="center">
-        <H4>Bet Title</H4>
-        <Controller
-          control={control}
-          rules={{
-            required: true,
-          }}
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              placeholder="Bet Title"
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior="padding"
+      keyboardVerticalOffset={91}
+    >
+      <ScrollView>
+        <Form onSubmit={createNewBet}>
+          <YStack alignSelf="center">
+            <H4>Bet Title</H4>
+            <Controller
+              control={control}
+              rules={{
+                required: true,
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <Input
+                  placeholder="Bet Title"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+              name="title"
             />
-          )}
-          name="title"
-        />
-        {errors.title && <Text>The bet must have a title</Text>}
+            {errors.title && <Text>The bet must have a title</Text>}
 
-        <H4>End Date</H4>
-        <Controller
-          control={control}
-          rules={{
-            required: true,
-          }}
-          render={({ field: { onChange, onBlur, value } }) => (
-            <>
-              <Button
-                onPress={() => {
-                  setIsDatePickerShown(true);
-                }}
-              >
-                {value}
-              </Button>
-              {isDatePickerShown && (
+            <H4>End Date</H4>
+            <Controller
+              control={control}
+              rules={{
+                required: true,
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
                 <DateTimePicker
                   value={value}
                   mode="date"
-                  display="default"
+                  display="spinner"
                   onChange={(event, selectedDate) => {
                     setIsDatePickerShown(false);
                     onChange(selectedDate);
@@ -90,19 +108,23 @@ const CreateScreen = () => {
                   }}
                 />
               )}
-            </>
-          )}
-          name="endDate"
-        />
+              name="endDate"
+            />
+            {errors.endDate && <Text>The bet must have an end date</Text>}
 
-        <H4>Options</H4>
-        <OptionsListForm control={control} />
+            <H4>Options</H4>
+            <OptionsListForm control={control} />
+            {errors.options && (
+              <Text>The bet must have at least one option</Text>
+            )}
 
-        <Form.Trigger asChild>
-          <Button>Create Bet</Button>
-        </Form.Trigger>
-      </YStack>
-    </Form>
+            <Form.Trigger asChild>
+              <Button>Create Bet</Button>
+            </Form.Trigger>
+          </YStack>
+        </Form>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
