@@ -1,34 +1,62 @@
 import { ChevronDown } from "@tamagui/lucide-icons";
-import { Accordion, Button, H4, Square, Text, XStack, YStack } from "tamagui";
+import { format } from "date-fns";
+import {
+  Accordion,
+  Button,
+  H4,
+  Separator,
+  SizableText,
+  Square,
+  Text,
+  View,
+  XStack,
+  YStack,
+} from "tamagui";
 
-const BetListItem = ({ bet }: { bet: Bet }) => {
+type BetListItemProps = {
+  bet: Bet;
+  onBetOptionPress: (bet: Bet, option: BetOption) => void;
+};
+
+const BetListItem = ({ bet, onBetOptionPress }: BetListItemProps) => {
   return (
-    <Accordion.Item value="a1">
+    <Accordion.Item value={bet.id}>
       <Accordion.Trigger flexDirection="row" justifyContent="space-between">
         {({ open }: { open: boolean }) => (
           <>
-            <H4>{bet.title}</H4>
+            <YStack>
+              <H4>{bet.title}</H4>
+              <SizableText>
+                Ends: {format(bet.endDate, "MM/dd/yyy")}
+              </SizableText>
+            </YStack>
             <Square animation="quick" rotate={open ? "180deg" : "0deg"}>
               <ChevronDown size="$1" />
             </Square>
           </>
         )}
       </Accordion.Trigger>
-      <Accordion.HeightAnimator animation="medium">
-        <Accordion.Content animation="medium" exitStyle={{ opacity: 0 }}>
-          <YStack>
-            {bet.options.map((option, index) => (
+      <Accordion.Content animation="medium" exitStyle={{ opacity: 0 }}>
+        <YStack>
+          {bet.options.map((option, index) => (
+            <View key={option.id}>
               <XStack key={index} justifyContent="space-between">
                 <YStack>
                   <Text>{option.title}</Text>
                   <Text>{option.odds}</Text>
                 </YStack>
-                <Button>Bet</Button>
+                <Button
+                  onPress={() => onBetOptionPress(bet, option)}
+                  backgroundColor="$accentBackground"
+                >
+                  Bet
+                </Button>
               </XStack>
-            ))}
-          </YStack>
-        </Accordion.Content>
-      </Accordion.HeightAnimator>
+              <Separator marginVertical={10} />
+            </View>
+          ))}
+        </YStack>
+      </Accordion.Content>
     </Accordion.Item>
   );
 };

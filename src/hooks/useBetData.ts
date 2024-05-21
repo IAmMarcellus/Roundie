@@ -1,35 +1,28 @@
-import { HttpResponse, http } from "msw";
-import { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "expo-crypto";
 
+import mockBets from "mocks/bets";
 import calcPayout from "utils/calcPayout";
 
 const useBetData = () => {
-  const [bets, setBets] = useState<Bet[]>([]);
-  const [wagers, setWagers] = useState<Wager[]>([]);
-  const [coins, setCoins] = useState<number>(1000);
-
   const fetchBets = async () => {
-    return { bets };
+    return mockBets;
   };
 
   const createBet = async (newBetRequest: BetRequest) => {
     const optionsWithIds = newBetRequest.options.map((option) => ({
       ...option,
-      id: uuidv4(),
+      id: randomUUID(),
     }));
 
     const newBet: Bet = {
       ...newBetRequest,
-      id: uuidv4(),
+      id: randomUUID(),
       options: optionsWithIds,
     };
-    setBets([...bets, newBet]);
     return { status: 200, data: newBet };
   };
 
   const calcWagerPayout = (wager: WagerRequest) => {
-    // TODO: find bet using betId instead of passing bet object
     const option = wager.bet.options.find(
       (option) => option.id === wager.selectedOptionId
     );
@@ -39,20 +32,15 @@ const useBetData = () => {
   };
 
   const fetchWagers = async () => {
-    return { wagers };
+    return [] as Wager[];
   };
 
   const createWager = async (newWagerRequest: WagerRequest) => {
     const newWager: Wager = {
       ...newWagerRequest,
-      id: uuidv4(),
+      id: randomUUID(),
       payout: calcWagerPayout(newWagerRequest),
     };
-    if (newWager.amount > coins) {
-      // TODO: Return error for too big of a wager
-    }
-    setCoins(coins - newWager.amount);
-    setWagers([...wagers, newWager]);
     return { status: 200, data: newWager };
   };
 

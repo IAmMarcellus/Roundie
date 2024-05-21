@@ -1,13 +1,16 @@
 import { useState } from "react";
 
-import useModal from "./_useSheet";
+import useSheet from "./_useSheet";
 
-const usePlaceWagerModal = () => {
-  const [wager, setWager] = useState<Bet>();
+const usePlaceWagerSheet = () => {
+  const [wager, setWager] = useState<WagerRequest>();
+  const { isOpen, open, close } = useSheet();
 
-  const { isOpen, open, close } = useModal();
+  const openSheetForNewWager = (bet: Bet, option: BetOption) => {
+    setWager({ amount: 0, bet, selectedOptionId: option.id });
+    open();
+  };
 
-  return { isOpen, open, close, wager, setWager };
+  return { isOpen, open, close, wager, setWager, openSheetForNewWager };
 };
-
-export default usePlaceWagerModal;
+export default usePlaceWagerSheet;

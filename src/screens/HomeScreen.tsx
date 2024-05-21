@@ -1,10 +1,13 @@
+import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { useQuery } from "@tanstack/react-query";
-import { Button, H1, H2, H3, YStack } from "tamagui";
+import { Button, H2, View, YStack } from "tamagui";
 
 import useBetData from "hooks/useBetData";
 import { QUERY_KEYS } from "utils/constants";
 
-const HomeScreen = () => {
+type HomeScreenProps = BottomTabScreenProps<BottomTabParamList, "Home">;
+
+const HomeScreen = ({ navigation }: HomeScreenProps) => {
   // Prefetch bets to hydrate cache
   const { fetchBets } = useBetData();
   useQuery({
@@ -13,17 +16,35 @@ const HomeScreen = () => {
     notifyOnChangeProps: [],
   });
 
-  // TODO: Mock this as an api response
-  const currentBalance = 1000;
-
   return (
-    <YStack>
-      <H1>Roundie</H1>
-      <YStack>
-        <H2>Current Balance:</H2>
-        <H3>{currentBalance}</H3>
+    <YStack
+      flex={1}
+      justifyContent="space-around"
+      backgroundColor="$background"
+    >
+      <View flex={1} alignSelf="center" justifyContent="center">
+        <H2>Welcome to Roundie</H2>
+      </View>
+      <YStack flex={1} justifyContent="space-around">
+        <Button
+          size="$6"
+          onPress={() => navigation.navigate("Create")}
+          borderRadius="$4"
+          backgroundColor="$accentBackground"
+          margin="$4"
+        >
+          Create a bet
+        </Button>
+        <Button
+          size="$6"
+          onPress={() => navigation.navigate("Wager")}
+          borderRadius="$4"
+          backgroundColor="$accentBackground"
+          margin="$4"
+        >
+          Place a bet
+        </Button>
       </YStack>
-      <Button>Place a bet</Button>
     </YStack>
   );
 };

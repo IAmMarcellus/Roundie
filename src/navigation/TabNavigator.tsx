@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useQuery } from "@tanstack/react-query";
 import { View } from "react-native";
-import { H6 } from "tamagui";
+import { H2, H6 } from "tamagui";
 
 import useBetData from "hooks/useBetData";
 import CreateScreen from "screens/CreateScreen";
@@ -19,17 +19,18 @@ const TabNavigator = () => {
     queryFn: fetchWallet,
   });
 
-  // TODO: Handle loading and error states
   const walletAmount = getWalletQuery.data?.amount || 0;
 
   return (
     <Tab.Navigator
       screenOptions={{
+        headerLeft: () => <H2 color="$accentColor">Roundie</H2>,
         headerRight: () => (
           <View>
             <H6>{`Coins: ${walletAmount}`}</H6>
           </View>
         ),
+        headerTitle: () => null,
       }}
     >
       <Tab.Screen name="Home" component={Home} />

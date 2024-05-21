@@ -1,63 +1,95 @@
+import { X } from "@tamagui/lucide-icons";
 import { useToastController } from "@tamagui/toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { TextInput } from "react-native";
-import { Button, H4, Text, XStack, YStack } from "tamagui";
+import {
+  Button,
+  Dialog,
+  Fieldset,
+  H3,
+  H4,
+  Input,
+  Unspaced,
+  XStack,
+  YStack,
+} from "tamagui";
 
 import Sheet, { SheetProps } from "components/molecules/Sheet";
 import useBetData from "hooks/useBetData";
 import calcPayout from "utils/calcPayout";
 import { QUERY_KEYS } from "utils/constants";
 
-interface PlaceBetSheetProps extends SheetProps {
-  bet: Bet;
-  option: BetOption;
+interface PlaceWagerSheetProps extends SheetProps {
+  wager?: WagerRequest;
 }
 
-const PlaceBetSheet = ({
+const PlaceWagerSheet = ({
   isOpen,
-  open,
   close,
-  bet,
-  option,
-}: PlaceBetSheetProps) => {
+  wager,
+  open,
+}: PlaceWagerSheetProps) => {
   const [payout, setPayout] = useState(0);
-
   const toast = useToastController();
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
+  const { control, handleSubmit, reset } = useForm({
     defaultValues: {
       amount: 0,
     },
   });
+
+  const { fetchWallet } = useBetData();
+  const getWalletQuery = useQuery({
+    queryKey: [QUERY_KEYS.WALLET],
+    queryFn: fetchWallet,
+  });
+  const walletAmount = getWalletQuery.data?.amount || 0;
 
   const { createWager } = useBetData();
   const queryClient = useQueryClient();
   const createWagerMutation = useMutation({
     mutationFn: createWager,
     onSuccess: ({ data: newWager }) => {
-      queryClient.setQueryData<Wager[]>([QUERY_KEYS.WAGERS], (oldWagers) => [
-        ...(oldWagers || []),
-        newWager,
-      ]);
-      // In a real app, we would update the wallet amount on the server when the bet
+      queryClient.setQueryData<Wager[]>([QUERY_KEYS.WAGERS], (oldWagers) => {
+        if (oldWagers && oldWagers.length) {
+          [...oldWagers, newWager];
+        }
+        return [newWager];
+      });
+      // In a real app, I'd update the wallet amount on the server when the bet is created
       queryClient.setQueryData<Wallet>([QUERY_KEYS.WALLET], (oldWallet) => {
         const newWalletAmount = (oldWallet?.amount || 1000) - newWager.amount;
         return { amount: newWalletAmount };
       });
       toast.show("Bet created!", {
         message: "New bet successfully created",
-        native: true,
       });
-      // TODO: Reset form state?
-      // TODO: Go to my bets screen
+      reset();
+      close();
+    },
+    onError: (error) => {
+      console.log("new wager request error");
+      toast.show("Error creating wager", {
+        message: error.message,
+      });
+      reset();
+      close();
     },
   });
+
+  if (!wager) {
+    return;
+  }
+
+  const { bet } = wager;
+  const option = bet.options.find(
+    (option) => option.id === wager.selectedOptionId
+  );
+  if (!option) {
+    close();
+    return;
+  }
 
   const placeWager = handleSubmit((data) => {
     const newWager: WagerRequest = {
@@ -71,55 +103,78 @@ const PlaceBetSheet = ({
 
   return (
     <Sheet isOpen={isOpen} open={open} close={close}>
-      <H4>{bet.title}</H4>
+      <Dialog.Title>
+        {bet.title} <H3>- {option.title}</H3>
+      </Dialog.Title>
+      <XStack justifyContent="space-around">
+        <H4>Odds: {option.odds}</H4>
 
-      <YStack>
-        <Text>{option.title}</Text>
-        <Text>Odds: {option.odds}</Text>
-
-        <XStack>
-          <XStack>
-            <Text>Amount:</Text>
-            <Controller
-              control={control}
-              rules={{
-                validate: (amount) => {
-                  if (amount <= 0) {
-                    return "Must wager at least 1 coin!";
-                  }
-                  if (option.odds < 0 && amount < option.odds / -100) {
-                    return "Must be at least " + option.odds / -100;
-                  }
-                  // TODO: validate that user has enough coins
-                  return true;
-                },
-              }}
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  placeholder="Bet Title"
-                  onBlur={onBlur}
-                  onChangeText={(amountString) => {
-                    onChange(Number(amountString));
-                    // TODO: use request to calculate payout
-                    const payout = calcPayout(
-                      Number(amountString),
-                      option.odds
-                    );
-                    setPayout(payout);
-                  }}
-                  value={value.toString()}
-                />
-              )}
-              name="amount"
-            />
-            {errors.amount && <Text>{errors.amount.message}</Text>}
-          </XStack>
-          <Text>Payout: {payout}</Text>
-        </XStack>
-        <Button onPress={placeWager}>Place Bet</Button>
+        <H4>Payout: {payout}</H4>
+      </XStack>
+      <YStack alignItems="center">
+        <Fieldset gap="$4" alignItems="center">
+          <Controller
+            control={control}
+            rules={{
+              validate: (amount) => {
+                if (amount <= 0) {
+                  return "Must wager at least 1 coin!";
+                }
+                if (option.odds < 0 && amount < option.odds / -100) {
+                  return "Must be at least " + option.odds / -100;
+                }
+                if (walletAmount - amount < 0) {
+                  return "You don't have enough coins for that wager!";
+                }
+                return true;
+              },
+            }}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input
+                inputMode="numeric"
+                placeholder="0"
+                onBlur={onBlur}
+                onChangeText={(amountString) => {
+                  onChange(Number(amountString));
+                  // TODO: use request to calculate payout
+                  const payout = calcPayout(Number(amountString), option.odds);
+                  setPayout(payout);
+                }}
+                value={value.toString()}
+                size="$10"
+                autoFocus
+              />
+            )}
+            name="amount"
+          />
+          <H4 justifyContent="center">Wager Amount</H4>
+        </Fieldset>
       </YStack>
+      <Button
+        theme="active"
+        onPress={() => {
+          console.log("BUTTON PRESSED");
+          placeWager();
+        }}
+        backgroundColor="$accentBackground"
+      >
+        Place Bet
+      </Button>
+
+      <Unspaced>
+        <Dialog.Close asChild>
+          <Button
+            position="absolute"
+            top="$3"
+            right="$3"
+            size="$2"
+            circular
+            icon={X}
+          />
+        </Dialog.Close>
+      </Unspaced>
     </Sheet>
   );
 };
 
-export default PlaceBetSheet;
+export default PlaceWagerSheet;
