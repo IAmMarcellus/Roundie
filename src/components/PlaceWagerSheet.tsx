@@ -69,7 +69,6 @@ const PlaceWagerSheet = ({
       close();
     },
     onError: (error) => {
-      console.log("new wager request error");
       toast.show("Error creating wager", {
         message: error.message,
       });
@@ -152,7 +151,6 @@ const PlaceWagerSheet = ({
       <Button
         theme="active"
         onPress={() => {
-          console.log("BUTTON PRESSED");
           placeWager();
         }}
         backgroundColor="$accentBackground"

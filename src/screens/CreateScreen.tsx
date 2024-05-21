@@ -45,11 +45,7 @@ const CreateScreen = ({ navigation }: CreateScreenProps) => {
   const createBetMutation = useMutation({
     mutationFn: createBet,
     onSuccess: ({ data: newBet }) => {
-      console.log("new bet request success");
       queryClient.setQueryData<Bet[]>([QUERY_KEYS.BETS], (oldBets) => {
-        console.log("SETTING QUERY DATA");
-        console.log(oldBets);
-        console.log(newBet);
         if (oldBets && oldBets?.length > 0) {
           return [...oldBets, newBet];
         }
@@ -62,7 +58,6 @@ const CreateScreen = ({ navigation }: CreateScreenProps) => {
       navigation.navigate("Wager");
     },
     onError: (error) => {
-      console.log("new bet request error");
       toast.show("Error creating bet", {
         message: error.message,
       });

@@ -3,7 +3,6 @@ import { focusManager } from "@tanstack/react-query";
 
 const useNavQueryFocus = () => {
   useFocusEffect(() => {
-    console.log("is refocusing");
     focusManager.setFocused(true);
 
     return () => {
