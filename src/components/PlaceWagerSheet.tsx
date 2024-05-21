@@ -136,7 +136,6 @@ const PlaceWagerSheet = ({
                 onBlur={onBlur}
                 onChangeText={(amountString) => {
                   onChange(Number(amountString));
-                  // TODO: use request to calculate payout
                   const payout = calcPayout(Number(amountString), option.odds);
                   setPayout(payout);
                 }}

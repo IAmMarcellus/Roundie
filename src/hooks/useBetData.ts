@@ -26,7 +26,6 @@ const useBetData = () => {
     const option = wager.bet.options.find(
       (option) => option.id === wager.selectedOptionId
     );
-    // TODO: throw error if option is undefined
     const payout = calcPayout(wager.amount, option?.odds || 0);
     return payout;
   };

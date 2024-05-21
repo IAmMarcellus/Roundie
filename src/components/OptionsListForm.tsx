@@ -72,10 +72,7 @@ const OptionsListForm = ({ control }: OptionsListFormProps) => {
               rules={{
                 required: true,
               }}
-              render={({ field: { value } }) => (
-                // TODO: Must be at least 100, or under -100
-                <H4>Odds: {value}</H4>
-              )}
+              render={({ field: { value } }) => <H4>Odds: {value}</H4>}
               name={`options.${index}.odds`}
             />
           </Fieldset>
