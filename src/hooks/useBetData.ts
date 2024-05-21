@@ -28,7 +28,7 @@ const useBetData = () => {
     return { status: 200, data: newBet };
   };
 
-  const calcWagerPayout = (wager: Wager) => {
+  const calcWagerPayout = (wager: WagerRequest) => {
     // TODO: find bet using betId instead of passing bet object
     const option = wager.bet.options.find(
       (option) => option.id === wager.selectedOptionId
@@ -46,6 +46,7 @@ const useBetData = () => {
     const newWager: Wager = {
       ...newWagerRequest,
       id: uuidv4(),
+      payout: calcWagerPayout(newWagerRequest),
     };
     if (newWager.amount > coins) {
       // TODO: Return error for too big of a wager
@@ -55,12 +56,17 @@ const useBetData = () => {
     return { status: 200, data: newWager };
   };
 
+  const fetchWallet = async () => {
+    return { amount: 1000 } as Wallet;
+  };
+
   return {
     fetchBets,
     createBet,
     fetchWagers,
     createWager,
     calcWagerPayout,
+    fetchWallet,
   };
 };
 

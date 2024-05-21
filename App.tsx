@@ -8,20 +8,25 @@ import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client
 import { useEffect, useState } from "react";
 import { TamaguiProvider, createTamagui } from "tamagui";
 
-import LoadingSpinner from "./src/components/atoms/LoadingSpinner";
-import TabNavigator from "./src/navigation/TabNavigator";
+import LoadingSpinner from "components/atoms/LoadingSpinner";
+import TabNavigator from "navigation/TabNavigator";
+import tamaguiConfig from "theme/tamagui.config";
 
+/*
 const tamaguiConfig = createTamagui(config);
 
 type Conf = typeof tamaguiConfig;
 declare module "@tamagui/core" {
   interface TamaguiCustomConfig extends Conf {}
 }
+*/
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       gcTime: Infinity,
+      refetchOnMount: false, // Disabled for use with mock data
+      refetchOnReconnect: false, // Disabled for use with mock data
     },
   },
 });

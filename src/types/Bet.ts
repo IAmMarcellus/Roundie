@@ -29,3 +29,7 @@ interface Wager extends WagerBase {
   payout: number;
 }
 // type WagerCalcPayoutRequest = Omit<Wager, "id"
+
+type Wallet = {
+  amount: number;
+};

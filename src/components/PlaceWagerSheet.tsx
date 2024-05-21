@@ -45,11 +45,15 @@ const PlaceBetSheet = ({
         ...(oldWagers || []),
         newWager,
       ]);
+      // In a real app, we would update the wallet amount on the server when the bet
+      queryClient.setQueryData<Wallet>([QUERY_KEYS.WALLET], (oldWallet) => {
+        const newWalletAmount = (oldWallet?.amount || 1000) - newWager.amount;
+        return { amount: newWalletAmount };
+      });
       toast.show("Bet created!", {
         message: "New bet successfully created",
         native: true,
       });
-      // TODO: Update coins
       // TODO: Reset form state?
       // TODO: Go to my bets screen
     },

@@ -1,27 +1,19 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { useToastController } from "@tamagui/toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { KeyboardAvoidingView } from "react-native";
-import {
-  Button,
-  Form,
-  H4,
-  Input,
-  ScrollView,
-  Text,
-  YStack,
-  ZStack,
-} from "tamagui";
+import { Button, Form, H4, Input, ScrollView, Text, YStack } from "tamagui";
 
 import OptionsListForm from "components/OptionsListForm";
 import useBetData from "hooks/useBetData";
 import { QUERY_KEYS } from "utils/constants";
 
-const CreateScreen = () => {
+type CreateScreenProps = BottomTabScreenProps<BottomTabParamList, "Create">;
+
+const CreateScreen = ({ navigation }: CreateScreenProps) => {
   const toast = useToastController();
-  const [isDatePickerShown, setIsDatePickerShown] = useState(false);
 
   const {
     control,
@@ -50,7 +42,7 @@ const CreateScreen = () => {
         native: true,
       });
       // TODO: Reset form state?
-      // TODO: Go to my bets screen
+      navigation.navigate("My Bets");
     },
     onError: (error) => {
       console.log("new bet request error");
@@ -102,7 +94,6 @@ const CreateScreen = () => {
                   mode="date"
                   display="spinner"
                   onChange={(event, selectedDate) => {
-                    setIsDatePickerShown(false);
                     onChange(selectedDate);
                     onBlur();
                   }}
